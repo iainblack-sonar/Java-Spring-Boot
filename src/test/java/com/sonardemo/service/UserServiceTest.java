@@ -28,20 +28,12 @@ class UserServiceTest {
         String token1 = userService.generateSessionToken();
         String token2 = userService.generateSessionToken();
         
-        // Tokens should be different (most of the time)
         assertNotEquals(token1, token2);
     }
 
     @Test
-    void validatePassword_withMatchingPasswords_returnsTrue() {
-        boolean result = userService.validatePassword("password123", "password123");
-        
-        assertTrue(result);
-    }
-
-    @Test
-    void validatePassword_withNonMatchingPasswords_returnsFalse() {
-        boolean result = userService.validatePassword("password123", "wrongpassword");
+    void authenticate_withNonExistentUser_returnsFalse() {
+        boolean result = userService.authenticate("nonexistent", "password");
         
         assertFalse(result);
     }
@@ -75,20 +67,45 @@ class UserServiceTest {
     }
 
     @Test
-    void findUserByUsername_withNonExistentUser_returnsNull() {
-        // This will fail to connect to DB but should return null due to exception handling
-        User user = userService.findUserByUsername("nonexistent");
+    void findByUsername_withNonExistentUser_returnsNull() {
+        User user = userService.findByUsername("nonexistent");
+        
+        assertNull(user);
+    }
+
+    @Test
+    void findByEmail_withNonExistentEmail_returnsNull() {
+        User user = userService.findByEmail("nonexistent@example.com");
         
         assertNull(user);
     }
 
     @Test
     void searchUsers_withInvalidDb_returnsEmptyList() {
-        // This will fail to connect to DB but should return empty list due to exception handling
         var users = userService.searchUsers("test", "admin");
         
         assertNotNull(users);
         assertTrue(users.isEmpty());
     }
-}
 
+    @Test
+    void findByRole_withInvalidDb_throwsException() {
+        assertThrows(RuntimeException.class, () -> {
+            userService.findByRole("ADMIN", "username");
+        });
+    }
+
+    @Test
+    void updateUserRole_withInvalidDb_throwsException() {
+        assertThrows(RuntimeException.class, () -> {
+            userService.updateUserRole("123", "ADMIN");
+        });
+    }
+
+    @Test
+    void deleteUser_withInvalidDb_returnsFalse() {
+        boolean result = userService.deleteUser("nonexistent");
+        
+        assertFalse(result);
+    }
+}
